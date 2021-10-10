@@ -50,6 +50,11 @@ func compareRepo(fork string) (int, int) {
 	behind := -1
 	c := colly.NewCollector()
 	c.OnHTML(".flex-auto.d-flex", func(e *colly.HTMLElement) {
+		contents := strings.TrimSpace(e.Text)
+		if strings.HasPrefix(contents, "This branch is") {
+			fmt.Println(fork, contents)
+		}
+
 		// Only considering forks ahead.
 		if strings.Contains(e.Text, "ahead") {
 			match := re.FindStringSubmatch(e.Text)
@@ -59,13 +64,13 @@ func compareRepo(fork string) (int, int) {
 	})
 	c.Visit(repoURL(fork))
 	// if ahead > 0 {
-	// 	pp.Println(fork, ahead, behind)
+	// 	fmt.Println(fork, ahead, behind)
 	// }
 	return ahead, behind
 }
 
 func main() {
-	if (len(os.Args) < 2) {
+	if len(os.Args) < 2 {
 		os.Stderr.WriteString("Usage: forkizard owner/repo\n")
 		os.Exit(1)
 	}
@@ -85,7 +90,7 @@ func main() {
 	}
 	bar.FinishPrint("done")
 	iter, err := sm.IterCh()
-	if (err != nil) {
+	if err != nil {
 		bar.FinishPrint(err.Error())
 	} else {
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
@@ -94,5 +99,5 @@ func main() {
 			fmt.Fprintln(w, fmt.Sprintf("%s\t+%d -%d", key, mahead[key], mbehind[key]))
 		}
 		w.Flush()
-    }
+	}
 }
